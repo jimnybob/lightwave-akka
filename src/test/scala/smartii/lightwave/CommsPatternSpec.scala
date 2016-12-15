@@ -27,4 +27,8 @@ class CommsPatternSpec extends FlatSpec {
     """*!{"trans":11,"mac":"03:3F:75","time":1481740551,"pkt":"system","fn":"hubCall","type":"hub","prod":"wfl","fw":"U2.93Z","uptime":3660,"timeZone":0,"lat":52.48,"long":-1.86,"tmrs":3,"evns":3,"run":0,"macs":5,"ip":"192.168.0.2","devs":1}
       |"""
   }
+
+  it should "match events" in {
+    """*!{"trans":41,"mac":"03:3F:75","time":1481804783,"pkt":"433T","fn":"allOff","room":1,"dev":1}"""
+  }
 }
