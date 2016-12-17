@@ -1,12 +1,14 @@
 package smartii.lightwave.benchmark
 
 import java.net._
-import java.nio.channels.DatagramChannel
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
-import akka.io.Inet.{DatagramChannelCreator, SocketOptionV2}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import com.typesafe.config.ConfigFactory
 import akka.io.{IO, Udp}
+import smartii.lightwave.MessageDigester
+import akka.event.Logging
+import com.lightwaverf.api.model.DeviceMessage
+import smartii.lightwave.model.{DimmerDevEvent, isDimEvent}
 
 object LightwaveReceiver {
 
@@ -16,10 +18,9 @@ object LightwaveReceiver {
   }
 }
 
-class LightwaveReceiver extends Actor {
+class LightwaveReceiver extends Actor with ActorLogging {
   import context.system
   import Sender._
-
 
   private val LightwaveUdpBroadcastPort = 9761
 
@@ -35,9 +36,12 @@ class LightwaveReceiver extends Actor {
 
   private def ready(socket: ActorRef): Receive = {
     case Udp.Received(data, remote) =>
-      println("Akka received stuff")
 
-      println(data.asInstanceOf[akka.util.ByteString].utf8String)
+      DeviceMessage(data.utf8String) match {
+        case dimmerMsg @ isDimEvent() => { DimmerDevEvent(dimmerMsg)  }
+        case unknownMsg => log.error(new IllegalArgumentException(s"Unable to deserialise message: $unknownMsg"), s"Unable to deserialise message: $unknownMsg")
+      }
+
     //      val processed = // parse data etc., e.g. using PipelineStage
     //        socket ! Udp.Send(data, remote) // example server echoes back
     //      nextActor ! processed
