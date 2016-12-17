@@ -5,10 +5,10 @@ import java.net._
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import com.typesafe.config.ConfigFactory
 import akka.io.{IO, Udp}
-import smartii.lightwave.MessageDigester
+import smartii.lightwave.{Lookup, MessageDigester}
 import akka.event.Logging
 import com.lightwaverf.api.model.DeviceMessage
-import smartii.lightwave.model.{DimmerDevEvent, isDimEvent}
+import smartii.lightwave.model._
 
 object LightwaveReceiver {
 
@@ -24,6 +24,12 @@ class LightwaveReceiver extends Actor with ActorLogging {
 
   private val LightwaveUdpBroadcastPort = 9761
 
+  private val lookupService: Lookup = new Lookup {
+    override def getRoomName(id: Int) = ???
+
+    override def getDeviceName(id: Int) = ???
+  }
+
   IO(Udp) ! Udp.Bind(self, new InetSocketAddress(LightwaveUdpBroadcastPort))
 
   def receive = {
@@ -38,7 +44,8 @@ class LightwaveReceiver extends Actor with ActorLogging {
     case Udp.Received(data, remote) =>
 
       DeviceMessage(data.utf8String) match {
-        case dimmerMsg @ isDimEvent() => { DimmerDevEvent(dimmerMsg)  }
+        case msg @ isDimEvent() => { DimmerDevEvent(msg).run(lookupService)  }
+        case msg @ isOnOffEvent() => { OnOffDevEvent(msg).run(lookupService)  }
         case unknownMsg => log.error(new IllegalArgumentException(s"Unable to deserialise message: $unknownMsg"), s"Unable to deserialise message: $unknownMsg")
       }
 

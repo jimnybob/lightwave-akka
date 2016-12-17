@@ -1,5 +1,7 @@
 package smartii.lightwave.model
 
+import com.lightwaverf.api.model.DeviceMessage
+
 /**
   * Created by jimbo on 14/12/16.
   */
@@ -7,7 +9,18 @@ sealed trait Event
 
 case class Dim(percent: Int) extends Event
 
-case object On extends Event
+sealed trait OnOffEvent extends Event
 
-case object Off extends Event
+object OnOffEvent {
+
+  def getEvent(deviceMessage: DeviceMessage): OnOffEvent = deviceMessage.fn match {
+    case "on" => On
+    case "off" => Off
+    case other => throw new MatchError(s"Unable to match on/off event for value $other")
+  }
+}
+
+case object On extends OnOffEvent
+
+case object Off extends OnOffEvent
 

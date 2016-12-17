@@ -12,31 +12,29 @@ sealed trait DeviceEvent {
   def event: Event
 }
 
-case class OnDevEvent(device: OnOff) extends DeviceEvent {
-  override def event: Event = On
-}
+case class OnOffDevEvent(device: OnOff, event: OnOffEvent)
 
-case class OffDevEvent(device: OnOff) extends DeviceEvent {
-  override def event: Event = Off
+object OnOffDevEvent {
+
+  def apply(deviceMessage: DeviceMessage):  Reader[Lookup, OnOffDevEvent] = deviceMessage match {
+    case deviceMessage @ isOnOffEvent() => {
+      OnOff(deviceMessage).flatMap[OnOffDevEvent](k => k.map[OnOffDevEvent](o => OnOffDevEvent(o, OnOffEvent.getEvent(deviceMessage))))
+    }
+  }
 }
 
 object DimmerDevEvent {
 
   def apply(deviceMessage: DeviceMessage):  Reader[Lookup, DimmerDevEvent] = deviceMessage match {
-    case deviceMessage if deviceMessage.fn == "dim" => {
+    case deviceMessage @ isDimEvent() => {
       Dimmer(deviceMessage).flatMap[DimmerDevEvent](k => k.map[DimmerDevEvent](d => DimmerDevEvent(d, Dim(deviceMessage.param.get))))
     }
   }
 }
 
-object isOnEvent {
+object isOnOffEvent {
 
-  def unapply(deviceMessage: DeviceMessage): Boolean = deviceMessage.fn == "on"
-}
-
-object isOffEvent {
-
-  def unapply(deviceMessage: DeviceMessage): Boolean = deviceMessage.fn == "off"
+  def unapply(deviceMessage: DeviceMessage): Boolean = deviceMessage.fn == "on" || deviceMessage.fn == "off"
 }
 
 object isDimEvent {
