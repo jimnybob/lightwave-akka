@@ -9,12 +9,14 @@ import smartii.lightwave.{Lookup, MessageDigester}
 import akka.event.Logging
 import com.lightwaverf.api.model.DeviceMessage
 import smartii.lightwave.model._
+import smartii.roku.SSDPListener
 
 object LightwaveReceiver {
 
   def main(args: Array[String]): Unit = {
     val system = ActorSystem("Sys", ConfigFactory.load("remotelookup"))
     system.actorOf(Props[LightwaveReceiver], "rcv")
+    system.actorOf(Props[SSDPListener], "roku")
   }
 }
 
@@ -25,9 +27,9 @@ class LightwaveReceiver extends Actor with ActorLogging {
   private val LightwaveUdpBroadcastPort = 9761
 
   private val lookupService: Lookup = new Lookup {
-    override def getRoomName(id: Int) = ???
+    override def getRoomName(id: Int) = "kitchen"
 
-    override def getDeviceName(id: Int) = ???
+    override def getDeviceName(id: Int) = "device"
   }
 
   IO(Udp) ! Udp.Bind(self, new InetSocketAddress(LightwaveUdpBroadcastPort))

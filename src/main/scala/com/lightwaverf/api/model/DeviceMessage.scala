@@ -25,12 +25,12 @@ object DeviceMessage {
 
   def apply2: PartialFunction[String, DeviceMessage] = {
     case message: String if message.startsWith("*!") && Try(message.drop(2).parseJson.convertTo[DeviceMessage](DeviceMessageJson.format)).isSuccess => message.drop(2).parseJson.convertTo[DeviceMessage](DeviceMessageJson.format)
-    case _ => throw new MatchError("Lightwave messages should start with '*!'")
+    case otherMsg => throw new MatchError(s"Lightwave messages should start with '*!'. Message is: $otherMsg")
   }
 
   def apply(message: String): DeviceMessage = message match {
     case message: String if message.startsWith("*!") && Try(message.drop(2).parseJson.convertTo[DeviceMessage](DeviceMessageJson.format)).isSuccess => message.drop(2).parseJson.convertTo[DeviceMessage](DeviceMessageJson.format)
-    case _ => throw new MatchError("Lightwave messages should start with '*!'")
+    case otherMsg => throw new MatchError(s"Lightwave messages should start with '*!'.  Message is: $otherMsg")
   }
 }
 
